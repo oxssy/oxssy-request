@@ -11,7 +11,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "http://github.com/oxssy/oxssy-request.git"
+    "url": "git+ssh://git@github.com/oxssy/oxssy-request.git"
   },
   "dependencies": {
     "oxssy": ">=0.1.8",
@@ -35,5 +35,11 @@
   "scripts": {
     "build": "rimraf dist & babel src --presets babel-preset-es2015,babel-preset-stage-2 --out-dir dist",
     "prepublishOnly": "npm run build"
+  },
+  "bugs": {
+    "url": "https://github.com/oxssy/oxssy-request/issues"
+  },
+  "directories": {
+    "test": "test"
   }
 }

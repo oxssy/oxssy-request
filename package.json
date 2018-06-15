@@ -1,6 +1,6 @@
 {
   "name": "oxssy-request",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Oxssy <oxssy.com@gmail.com>",
   "description": "Communication between server and client via Oxssy",
   "main": "./dist/index.js",

@@ -1,68 +1,119 @@
+import http from 'http';
 import { setLocation } from 'oxssy-router';
-import { ValidationError } from 'oxssy';
+import { compile } from 'path-to-regexp';
+import { stringify } from 'querystring';
 import request from './http';
+import validate from './validate';
 
 
 export default class OxssyRequest {
-  constructor(
-    url, method, requestOxssy, responseOxssy, validationErrorOxssy = null,
-    requestErrorOxssy = null, loadingOxssy = null,
-  ) {
+  constructor(url, requestOxssy = null, responseOxssy = null, option = {}) {
     this.url = url;
-    this.method = method;
-    this.requestOxssy = Object.keys(requestOxssy) ? requestOxssy : null;
+    this.compiledUrl = compile(url);
+    this.requestOxssy = requestOxssy;
     this.responseOxssy = responseOxssy;
-    this.validationErrorOxssy = validationErrorOxssy;
-    this.requestErrorOxssy = requestErrorOxssy;
+    const {
+      loadingOxssy,
+      method,
+      requestErrorOxssy,
+    } = option;
     this.loadingOxssy = loadingOxssy;
+    this.method = method;
+    this.requestErrorOxssy = requestErrorOxssy;
+    this.send = this.send.bind(this);
   }
 
   setLoading(isLoading) {
     return this.loadingOxssy ? this.loadingOxssy.update(isLoading) : Promise.resolve();
   }
 
-  setValidationError(validationError) {
-    return this.validationErrorOxssy
-      ? this.validationErrorOxssy.update(validationError ? validationError.errorCode : null)
-      : Promise.resolve();
-  }
-
   setRequestError(requestError) {
-    return this.requestErrorOxssy
+    return (this.requestErrorOxssy && !(requestError && requestError.oxssy))
       ? this.requestErrorOxssy.update(requestError ? requestError.message : null)
       : Promise.resolve();
   }
 
-  clearErrors() {
-    return Promise.all([this.setValidationError(null), this.setRequestError(null)]);
-  }
-
   onResponse(response) {
-    const { location, update } = response;
-    if (location) {
-      const { pathname, search } = location;
+    const { redirect, update } = response;
+    if (redirect) {
+      const { pathname, search } = redirect;
       setLocation(pathname, search);
     }
-    return this.responseOxssy.update(update);
+    return this.responseOxssy ? this.responseOxssy.update(update) : Promise.resolve();
   }
 
-  send() {
-    return this.clearErrors()
+  validateRequest() {
+    return this.requestOxssy ? this.requestOxssy.validate(true) : Promise.resolve();
+  }
+
+  send(params = null, query = null) {
+    return this.setRequestError(null)
       .then(() => this.setLoading(true))
-      .then(() => this.requestOxssy.validate())
+      .then(() => this.validateRequest())
       .then(() => request(
-        this.url,
+        `${this.compiledUrl(typeof params === 'object' ? params : {})}` +
+        `${query ? `?${stringify(query)}` : ''}`,
         this.requestOxssy ? this.requestOxssy.value : null,
         this.method,
       ))
-      .then(this.onResponse)
-      .catch((error) => {
-        if (error instanceof ValidationError) {
-          this.setValidationError(error);
-        } else {
-          this.setRequestError(error);
+      .then(response => this.onResponse(response))
+      .catch(error => this.setRequestError(error))
+      .then(() => this.setLoading(false));
+  }
+
+  handle(app, computeResponse = null) {
+    const method = this.method.toLowerCase();
+    if (!(method in http.METHODS)) {
+      throw new Error(`OxssyRequest: cannot handle request with unknown method ${method}`);
+    }
+    if (this.responseOxssy && !computeResponse) {
+      throw new Error(`OxssyRequest: missing computeUpdate function for ${method}(${this.url})`);
+    }
+    app[method](this.url, (req, res) => {
+      try {
+        if (this.requestOxssy) {
+          validate(this.requestOxssy, req.body);
         }
-      })
-      .then(this.setLoading(false));
+      } catch (error) {
+        res.statusMessage = http.STATUS_CODES[400];
+        return res.status(400).end();
+      }
+      try {
+        const {
+          cookie,
+          cookieOption,
+          redirect,
+          update,
+        } = computeResponse(
+          this.requestOxssy ? this.requestOxssy.value : null,
+          req,
+        );
+        let resRedirect = null;
+        if (redirect) {
+          resRedirect = typeof redirect === 'string'
+            ? { pathname: redirect }
+            : { pathname: redirect.pathname, search: redirect.search };
+        }
+        if (this.responseOxssy) {
+          validate(this.responseOxssy, update);
+        }
+        if (cookie) {
+          Object.entries(cookie).forEach(([name, value]) => {
+            res.cookie(
+              name,
+              value,
+              (cookieOption && cookieOption[name]) ? cookieOption[name] : null,
+            );
+          });
+        }
+        return res.json({
+          redirect: resRedirect,
+          update,
+        });
+      } catch (error) {
+        res.statusMessage = http.STATUS_CODES[500];
+        return res.status(500).end();
+      }
+    });
   }
 }

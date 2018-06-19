@@ -95,7 +95,7 @@ export default class OxssyRequest {
             : { pathname: redirect.pathname, search: redirect.search };
         }
         if (this.responseOxssy) {
-          validate(this.responseOxssy, update);
+          validate(this.responseOxssy, update, false);
         }
         if (cookie) {
           Object.entries(cookie).forEach(([name, value]) => {

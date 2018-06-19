@@ -1,7 +1,7 @@
 import { Oxssy, OxssyArray, OxssyMap } from 'oxssy';
 
 
-const validate = (oxssy, value) => {
+const validate = (oxssy, value, strict = true) => {
   if (oxssy instanceof Oxssy) {
     const error = oxssy.type(value);
     if (error) {
@@ -23,7 +23,11 @@ const validate = (oxssy, value) => {
         throw new Error(`Unexpected value ${value} with key ${key}`);
       }
     });
-    Object.entries(oxssy.oxssyMap).forEach(([key, entry]) => validate(entry, value[key]));
+    if (strict) {
+      Object.entries(oxssy.oxssyMap).forEach(([key, child]) => validate(child, value[key]));
+    } else {
+      Object.entries(value).forEach(([key, child]) => validate(oxssy.oxssyMap[key], child));
+    }
   } else {
     throw new Error(`Cannot validate against ${oxssy}`);
   }

@@ -14,7 +14,7 @@
     "url": "git+ssh://git@github.com/oxssy/oxssy-request.git"
   },
   "dependencies": {
-    "oxssy": "^0.1.15",
+    "oxssy": ">=0.1.15",
     "oxssy-router": ">=0.1.7",
     "path-to-regexp": "^2.2.1"
   },

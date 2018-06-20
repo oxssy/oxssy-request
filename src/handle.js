@@ -19,7 +19,7 @@ const handle = (app, request, computeResponse) => {
     }
     try {
       const response = {};
-      const computed = computeResponse(requestOxssy ? requestOxssy.value : null, req);
+      const computed = computeResponse(requestOxssy ? req.body : null, req);
       const { cookie, cookieOption, redirect } = computed;
       if (redirect) {
         response.redirect = typeof redirect === 'string'

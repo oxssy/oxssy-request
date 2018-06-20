@@ -7,15 +7,12 @@ const checkResponseStatus = (response) => {
 
 const parseResponseJSON = response => response.json();
 
-const request = (url, payload = null, method = null) => {
-  if (!method) {
-    method = payload ? 'POST' : 'GET';
-  }
+const request = (url, method, payload = null) => {
   const fetchParams = payload
     ? {
       body: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' },
-      method,
+      method: method.toUpperCase(),
     }
     : { method };
   return fetch(url, fetchParams).then(checkResponseStatus).then(parseResponseJSON);

@@ -3,11 +3,10 @@ import validate from './validate';
 
 
 const handle = (app, request, computeResponse) => {
-  const method = request.method.toLowerCase();
-  if (!http.METHODS.includes(method)) {
-    throw new Error(`OxssyRequest: cannot handle request with unknown method ${method}`);
+  if (!http.METHODS.includes(request.method.toUpperCase())) {
+    throw new Error(`OxssyRequest: cannot handle request with unknown method ${request.method}`);
   }
-  app[method](request.url, (req, res) => {
+  app[request.method](request.url, (req, res) => {
     const requestOxssy = request.getRequestOxssy(req.params);
     const responseOxssy = request.getResponseOxssy(req.params);
     try {

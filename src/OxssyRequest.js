@@ -16,7 +16,7 @@ export default class OxssyRequest {
       requestErrorOxssy,
     } = option;
     this.loadingOxssy = loadingOxssy;
-    this.method = method;
+    this.method = method || (requestOxssy ? 'post' : 'get');
     this.requestErrorOxssy = requestErrorOxssy;
     this.send = this.send.bind(this);
   }
@@ -90,8 +90,8 @@ export default class OxssyRequest {
         const requestOxssy = this.getRequestOxssy(params);
         return request(
           this.getRequestUrl(params, search),
-          requestOxssy ? requestOxssy.value : null,
           this.method,
+          requestOxssy ? requestOxssy.value : null,
         );
       })
       .then(response => this.onResponse(response, params))

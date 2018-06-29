@@ -11,8 +11,9 @@ const request = (url, method, payload = null) => {
   const fetchParams = payload
     ? {
       body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       method: method.toUpperCase(),
+      mode: 'no-cors',
     }
     : { method };
   return fetch(url, fetchParams).then(checkResponseStatus).then(parseResponseJSON);

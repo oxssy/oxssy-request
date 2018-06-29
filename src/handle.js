@@ -17,9 +17,8 @@ const handle = (app, request, computeResponse) => {
       res.statusMessage = http.STATUS_CODES[400];
       return res.status(400).end();
     }
-    try {
+    computeResponse(requestOxssy ? req.body : null, req).then((computed) => {
       const response = {};
-      const computed = computeResponse(requestOxssy ? req.body : null, req);
       const { cookie, cookieOption, redirect } = computed;
       if (redirect) {
         response.redirect = typeof redirect === 'string'
@@ -40,10 +39,10 @@ const handle = (app, request, computeResponse) => {
         });
       }
       return res.json(response);
-    } catch (error) {
+    }).catch(() => {
       res.statusMessage = http.STATUS_CODES[500];
       return res.status(500).end();
-    }
+    });
   });
 };
 export default handle;

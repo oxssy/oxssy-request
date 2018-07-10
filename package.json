@@ -14,9 +14,9 @@
     "url": "git+ssh://git@github.com/oxssy/oxssy-request.git"
   },
   "dependencies": {
-    "oxssy": ">=0.1.15",
-    "oxssy-router": ">=0.1.7",
-    "path-to-regexp": "^2.2.1"
+    "oxssy": ">=0.1.18",
+    "oxssy-router": ">=0.1.13",
+    "path-to-regexp": ">=2.2.1"
   },
   "devDependencies": {
     "babel-cli": ">=6.26.0",

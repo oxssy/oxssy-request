@@ -7,6 +7,8 @@ import request from './http';
 export default class OxssyRequest {
   constructor(url, requestOxssy = null, responseOxssy = null, option = {}) {
     this.url = url;
+    this.authenticate = null;
+    this.authRedirect = null;
     this.compiledUrl = compile(url);
     this.requestOxssy = requestOxssy;
     this.responseOxssy = responseOxssy;

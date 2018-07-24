@@ -24,13 +24,15 @@ const handleRequestError = (res, requestError, logger) => {
 };
 
 const handleServerError = (res, serverError, logger) => {
-  logger.error(`Server error while handling request. Error message ${serverError.message}`);
+  logger.error(`Server error while handling request. Error message: ${serverError.message}`);
   res.statusMessage = http.STATUS_CODES[500];
   res.status(500).end();
 };
 
 const handleAuthenticationError = (req, res, redirect, logger) => {
-  logger.info(`Unathenticated request from ${req.ip}.${redirect
+  logger.info(`Unathenticated request from ${
+    req.headers['x-forwarded-for'] || req.connection.remoteAddress
+  }.${redirect
     ? ` Redirected to ${redirect}`
     : ''}`);
   if (redirect) {
@@ -73,7 +75,7 @@ export const authenticate = (request, computeAuthenticate, redirect = null) => {
 
 export const handle = (app, request, computeResponse, logger = defaultLogger) => {
   if (!http.METHODS.includes(request.method.toUpperCase())) {
-    throw new Error(`OxssyRequest: cannot handle request with unknown method ${request.method}`);
+    throw new Error(`OxssyRequest: cannot handle request with unknown method: ${request.method}`);
   }
   app[request.method](request.url, (req, res) => {
     logger.info(`Handling request at '${request.url}' with request body: ${JSON.stringify(req.body)}`);

@@ -15,10 +15,12 @@ export default class OxssyRequest {
     const {
       loadingOxssy,
       method,
+      port,
       requestErrorOxssy,
     } = option;
     this.loadingOxssy = loadingOxssy;
     this.method = method || (requestOxssy ? 'post' : 'get');
+    this.port = port;
     this.requestErrorOxssy = requestErrorOxssy;
     this.send = this.send.bind(this);
   }

@@ -1,4 +1,4 @@
 import OxssyRequest from './OxssyRequest';
 
-export { authenticate, handle } from './server';
+export { authenticate, handle, handler } from './server';
 export default OxssyRequest;

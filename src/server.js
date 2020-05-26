@@ -73,29 +73,31 @@ export const authenticate = (request, computeAuthenticate, redirect = null) => {
   request.authRedirect = redirect;
 };
 
+export const handler = (request, computeResponse, logger = defaultLogger) => (req, res) => {
+  logger.info(`Handling request at '${request.url}' with request body: ${JSON.stringify(req.body)}`);
+  const requestOxssy = request.getRequestOxssy(req.params);
+  const responseOxssy = request.getResponseOxssy(req.params);
+  return new Promise((resolve, reject) => {
+    if (request.authenticate && !request.authenticate(req)) {
+      reject();
+    } else {
+      resolve();
+    }
+  }).then(
+    () => Promise.resolve(validateRequest(req, requestOxssy))
+      .then(
+        body => Promise.resolve(computeResponse(body, req, logger))
+          .then(computed => handleResponse(res, responseOxssy, computed, logger))
+          .catch(serverError => handleServerError(res, serverError, logger)),
+        requestError => handleRequestError(res, requestError, logger),
+      ),
+    () => handleAuthenticationError(req, res, request.authRedirect, logger),
+  );
+};
+
 export const handle = (app, request, computeResponse, logger = defaultLogger) => {
   if (!http.METHODS.includes(request.method.toUpperCase())) {
     throw new Error(`OxssyRequest: cannot handle request with unknown method: ${request.method}`);
   }
-  app[request.method](request.url, (req, res) => {
-    logger.info(`Handling request at '${request.url}' with request body: ${JSON.stringify(req.body)}`);
-    const requestOxssy = request.getRequestOxssy(req.params);
-    const responseOxssy = request.getResponseOxssy(req.params);
-    return new Promise((resolve, reject) => {
-      if (request.authenticate && !request.authenticate(req)) {
-        reject();
-      } else {
-        resolve();
-      }
-    }).then(
-      () => Promise.resolve(validateRequest(req, requestOxssy))
-        .then(
-          body => Promise.resolve(computeResponse(body, req, logger))
-            .then(computed => handleResponse(res, responseOxssy, computed, logger))
-            .catch(serverError => handleServerError(res, serverError, logger)),
-          requestError => handleRequestError(res, requestError, logger),
-        ),
-      () => handleAuthenticationError(req, res, request.authRedirect, logger),
-    );
-  });
+  app[request.method](request.url, handler(request, computeResponse, logger));
 };
